@@ -1,4 +1,4 @@
-package invcache_test
+package fluxcache_test
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	invstore "github.com/goware/cachestore-flux"
+	fluxstore "github.com/goware/cachestore-flux"
 	memcache "github.com/goware/cachestore-mem"
 	cachestore "github.com/goware/cachestore2"
 	"github.com/goware/logger"
@@ -17,21 +17,21 @@ import (
 )
 
 const (
-	RemoteInstance = invstore.InstanceID("remote-instance")
-	LocalInstance  = invstore.InstanceID("local-instance")
+	RemoteInstance = fluxstore.InstanceID("remote-instance")
+	LocalInstance  = fluxstore.InstanceID("local-instance")
 )
 
 func TestCacheInvalidator_Listen(t *testing.T) {
 	type testCase struct {
 		name          string
 		initial       map[string]string
-		msg           invstore.StoreInvalidationMessage
+		msg           fluxstore.StoreInvalidationMessage
 		expectRemoved []string
 		expectRemain  []string
 	}
 
 	getHash := func(val string) string {
-		h, err := invstore.ComputeHash(val)
+		h, err := fluxstore.ComputeHash(val)
 		require.NoError(t, err)
 		return h
 	}
@@ -42,8 +42,8 @@ func TestCacheInvalidator_Listen(t *testing.T) {
 			initial: map[string]string{
 				"key": "val",
 			},
-			msg: invstore.StoreInvalidationMessage{
-				Entries: []invstore.CacheInvalidationEntry{{Key: "key"}},
+			msg: fluxstore.StoreInvalidationMessage{
+				Entries: []fluxstore.CacheInvalidationEntry{{Key: "key"}},
 				Origin:  RemoteInstance,
 			},
 			expectRemoved: []string{"foo"},
@@ -53,8 +53,8 @@ func TestCacheInvalidator_Listen(t *testing.T) {
 			initial: map[string]string{
 				"key": "val",
 			},
-			msg: invstore.StoreInvalidationMessage{
-				Entries: []invstore.CacheInvalidationEntry{{Key: "key", ContentHash: getHash("val")}},
+			msg: fluxstore.StoreInvalidationMessage{
+				Entries: []fluxstore.CacheInvalidationEntry{{Key: "key", ContentHash: getHash("val")}},
 				Origin:  RemoteInstance,
 			},
 			expectRemain: []string{"key"},
@@ -64,8 +64,8 @@ func TestCacheInvalidator_Listen(t *testing.T) {
 			initial: map[string]string{
 				"key": "val",
 			},
-			msg: invstore.StoreInvalidationMessage{
-				Entries: []invstore.CacheInvalidationEntry{{Key: "key", ContentHash: getHash("val")}},
+			msg: fluxstore.StoreInvalidationMessage{
+				Entries: []fluxstore.CacheInvalidationEntry{{Key: "key", ContentHash: getHash("val")}},
 				Origin:  RemoteInstance,
 			},
 			expectRemain: []string{"key"},
@@ -75,8 +75,8 @@ func TestCacheInvalidator_Listen(t *testing.T) {
 			initial: map[string]string{
 				"key": "val",
 			},
-			msg: invstore.StoreInvalidationMessage{
-				Entries: []invstore.CacheInvalidationEntry{{Key: "key", ContentHash: getHash("oldVal")}},
+			msg: fluxstore.StoreInvalidationMessage{
+				Entries: []fluxstore.CacheInvalidationEntry{{Key: "key", ContentHash: getHash("oldVal")}},
 				Origin:  RemoteInstance,
 			},
 			expectRemoved: []string{"key"},
@@ -88,8 +88,8 @@ func TestCacheInvalidator_Listen(t *testing.T) {
 				"key2": "val2",
 				"key3": "val3",
 			},
-			msg: invstore.StoreInvalidationMessage{
-				Entries: []invstore.CacheInvalidationEntry{{Key: "key1"}, {Key: "key2"}},
+			msg: fluxstore.StoreInvalidationMessage{
+				Entries: []fluxstore.CacheInvalidationEntry{{Key: "key1"}, {Key: "key2"}},
 				Origin:  RemoteInstance,
 			},
 			expectRemoved: []string{"key1", "key2"},
@@ -102,8 +102,8 @@ func TestCacheInvalidator_Listen(t *testing.T) {
 				"key2": "val2",
 				"key3": "val3",
 			},
-			msg: invstore.StoreInvalidationMessage{
-				Entries: []invstore.CacheInvalidationEntry{
+			msg: fluxstore.StoreInvalidationMessage{
+				Entries: []fluxstore.CacheInvalidationEntry{
 					{Key: "key1", ContentHash: getHash("val1")},
 					{Key: "key2"},
 				},
@@ -118,8 +118,8 @@ func TestCacheInvalidator_Listen(t *testing.T) {
 				"key1": "val1",
 				"key2": "val2",
 			},
-			msg: invstore.StoreInvalidationMessage{
-				Entries: []invstore.CacheInvalidationEntry{
+			msg: fluxstore.StoreInvalidationMessage{
+				Entries: []fluxstore.CacheInvalidationEntry{
 					{Key: "key1", ContentHash: getHash("val1")},
 					{Key: "key2", ContentHash: getHash("val2")},
 				},
@@ -133,8 +133,8 @@ func TestCacheInvalidator_Listen(t *testing.T) {
 				"key1": "val1",
 				"key2": "val2",
 			},
-			msg: invstore.StoreInvalidationMessage{
-				Entries: []invstore.CacheInvalidationEntry{
+			msg: fluxstore.StoreInvalidationMessage{
+				Entries: []fluxstore.CacheInvalidationEntry{
 					{Key: "key1", ContentHash: getHash("old1")},
 					{Key: "key2", ContentHash: getHash("old2")},
 				},
@@ -149,8 +149,8 @@ func TestCacheInvalidator_Listen(t *testing.T) {
 				"key2": "val2",
 				"key3": "val3",
 			},
-			msg: invstore.StoreInvalidationMessage{
-				Entries: []invstore.CacheInvalidationEntry{
+			msg: fluxstore.StoreInvalidationMessage{
+				Entries: []fluxstore.CacheInvalidationEntry{
 					{Key: "key1", ContentHash: getHash("val1")},
 					{Key: "key2", ContentHash: getHash("old2")},
 					{Key: "key3"},
@@ -166,8 +166,8 @@ func TestCacheInvalidator_Listen(t *testing.T) {
 				"key1": "val1",
 				"key2": "val2",
 			},
-			msg: invstore.StoreInvalidationMessage{
-				Entries: []invstore.CacheInvalidationEntry{{Key: "*"}},
+			msg: fluxstore.StoreInvalidationMessage{
+				Entries: []fluxstore.CacheInvalidationEntry{{Key: "*"}},
 				Origin:  RemoteInstance,
 			},
 			expectRemoved: []string{"key1", "key2"},
@@ -179,8 +179,8 @@ func TestCacheInvalidator_Listen(t *testing.T) {
 				"abc2": "val2",
 				"xyz":  "zzz",
 			},
-			msg: invstore.StoreInvalidationMessage{
-				Entries: []invstore.CacheInvalidationEntry{{Key: "abc*"}},
+			msg: fluxstore.StoreInvalidationMessage{
+				Entries: []fluxstore.CacheInvalidationEntry{{Key: "abc*"}},
 				Origin:  RemoteInstance,
 			},
 			expectRemoved: []string{"abc1", "abc2"},
@@ -192,8 +192,8 @@ func TestCacheInvalidator_Listen(t *testing.T) {
 				"key1": "val1",
 				"key2": "val2",
 			},
-			msg: invstore.StoreInvalidationMessage{
-				Entries: []invstore.CacheInvalidationEntry{{Key: "key"}, {Key: "*"}},
+			msg: fluxstore.StoreInvalidationMessage{
+				Entries: []fluxstore.CacheInvalidationEntry{{Key: "key"}, {Key: "*"}},
 				Origin:  RemoteInstance,
 			},
 			expectRemoved: []string{},
@@ -205,8 +205,8 @@ func TestCacheInvalidator_Listen(t *testing.T) {
 				"key1": "val1",
 				"key2": "val2",
 			},
-			msg: invstore.StoreInvalidationMessage{
-				Entries: []invstore.CacheInvalidationEntry{{Key: "key"}, {Key: "key*"}},
+			msg: fluxstore.StoreInvalidationMessage{
+				Entries: []fluxstore.CacheInvalidationEntry{{Key: "key"}, {Key: "key*"}},
 				Origin:  RemoteInstance,
 			},
 			expectRemoved: []string{},
@@ -217,8 +217,8 @@ func TestCacheInvalidator_Listen(t *testing.T) {
 			initial: map[string]string{
 				"localKey": "val",
 			},
-			msg: invstore.StoreInvalidationMessage{
-				Entries: []invstore.CacheInvalidationEntry{{Key: "localKey"}},
+			msg: fluxstore.StoreInvalidationMessage{
+				Entries: []fluxstore.CacheInvalidationEntry{{Key: "localKey"}},
 				Origin:  LocalInstance,
 			},
 			expectRemain: []string{"localKey"},
@@ -230,12 +230,12 @@ func TestCacheInvalidator_Listen(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			sub := &mockSubscription[invstore.StoreInvalidationMessage]{
-				msgCh:  make(chan invstore.StoreInvalidationMessage, 10),
+			sub := &mockSubscription[fluxstore.StoreInvalidationMessage]{
+				msgCh:  make(chan fluxstore.StoreInvalidationMessage, 10),
 				doneCh: make(chan struct{}),
 			}
-			mps := &mockPubSub[invstore.StoreInvalidationMessage]{
-				subscribeFunc: func(ctx context.Context, chID string, opt ...string) (pubsub.Subscription[invstore.StoreInvalidationMessage], error) {
+			mps := &mockPubSub[fluxstore.StoreInvalidationMessage]{
+				subscribeFunc: func(ctx context.Context, chID string, opt ...string) (pubsub.Subscription[fluxstore.StoreInvalidationMessage], error) {
 					require.Equal(t, "store_invalidation", chID)
 					return sub, nil
 				},
@@ -249,8 +249,8 @@ func TestCacheInvalidator_Listen(t *testing.T) {
 			}
 
 			logger := logger.Nop()
-			ic := invstore.NewInvalidatingStore(store, mps)
-			ci := invstore.NewStoreInvalidator(logger, ic, mps)
+			ic := fluxstore.NewFluxStore(store, mps)
+			ci := fluxstore.NewStoreInvalidator(logger, ic, mps)
 
 			var wg sync.WaitGroup
 			wg.Add(1)

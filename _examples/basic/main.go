@@ -10,7 +10,7 @@ import (
 	"github.com/goware/logger"
 	"github.com/goware/pubsub/membus"
 
-	invcache "github.com/goware/cachestore-flux"
+	fluxcache "github.com/goware/cachestore-flux"
 )
 
 func main() {
@@ -38,7 +38,7 @@ func main() {
 	)
 
 	log := logger.NewLogger(logger.LogLevel_DEBUG)
-	ps, err := membus.New[invcache.StoreInvalidationMessage](log)
+	ps, err := membus.New[fluxcache.StoreInvalidationMessage](log)
 	if err != nil {
 		panic(err)
 	}
@@ -47,10 +47,10 @@ func main() {
 		runErr <- ps.Run(context.Background())
 	}()
 
-	icache1 := invcache.NewInvalidatingStore[string](store1, ps)
-	icache2 := invcache.NewInvalidatingStore[string](store2, ps)
+	icache1 := fluxcache.NewFluxStore[string](store1, ps)
+	icache2 := fluxcache.NewFluxStore[string](store2, ps)
 
-	invalidator := invcache.NewStoreInvalidator(log, icache2, ps)
+	invalidator := fluxcache.NewStoreInvalidator(log, icache2, ps)
 	go func() {
 		if err := invalidator.Listen(ctx); err != nil {
 			panic(err)

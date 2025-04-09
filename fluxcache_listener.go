@@ -1,4 +1,4 @@
-package invcache
+package fluxcache
 
 import (
 	"context"
@@ -10,11 +10,11 @@ import (
 
 type StoreInvalidator struct {
 	log    logger.Logger
-	store  LocalInvStore
+	store  LocalFluxStore
 	pubsub pubsub.PubSub[StoreInvalidationMessage]
 }
 
-func NewStoreInvalidator(log logger.Logger, store LocalInvStore, ps pubsub.PubSub[StoreInvalidationMessage]) *StoreInvalidator {
+func NewStoreInvalidator(log logger.Logger, store LocalFluxStore, ps pubsub.PubSub[StoreInvalidationMessage]) *StoreInvalidator {
 	return &StoreInvalidator{
 		log:    log,
 		store:  store,
